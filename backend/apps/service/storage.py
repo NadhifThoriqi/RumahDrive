@@ -2,7 +2,7 @@ from .files import directory
 
 import shutil
 
-def info():
+async def info():
     disk = shutil.disk_usage(directory())
     return {
         "total_bytes": disk.total,

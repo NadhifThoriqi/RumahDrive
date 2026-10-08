@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+  <title>RumahDrive — Penyimpanan Keluarga</title>
+  <!-- <link rel="stylesheet" href="/storage/thorix-assets/css/style.css" /> -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+</head>
+
+<body>
+
+  <!-- ========== HEADER ========== -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="header-top">
+        <div class="logo">
+          <span class="logo-icon">🏠</span>
+          <span class="logo-text">RumahDrive</span>
+        </div>
+        <button class="btn-icon-only" id="btnLogout" title="Keluar" aria-label="Keluar">⏻</button>
+      </div>
+      <div class="header-right">
+        <span class="user-badge" id="userBadge" hidden></span>
+        <div class="storage-badge" id="storageBadge">
+          <span class="storage-label">Loading…</span>
+        </div>
+      </div>
+    </div>
+    <nav class="breadcrumb" id="breadcrumb" aria-label="Lokasi folder">
+      <button class="crumb active" data-path="/">📁 Beranda</button>
+    </nav>
+  </header>
+
+  <!-- ========== TOOLBAR ========== -->
+  <div class="toolbar">
+    <button class="btn-toolbar" id="btnNewFolder" aria-label="Buat folder baru">
+      <span class="btn-icon">➕</span>
+      <span>Folder Baru</span>
+    </button>
+    <button class="btn-toolbar btn-primary" id="btnUpload" aria-label="Upload file">
+      <span class="btn-icon">⬆</span>
+      <span>Upload</span>
+    </button>
+    <input type="file" id="fileInput" multiple hidden />
+    <div class="toolbar-right">
+      <button class="btn-icon-only" id="btnViewToggle" title="Ganti tampilan" aria-label="Ganti tampilan">⊞</button>
+      <button class="btn-icon-only" id="btnRefresh" title="Refresh" aria-label="Refresh">↺</button>
+    </div>
+  </div>
+
+  <!-- ========== UPLOAD PROGRESS AREA ========== -->
+  <div class="upload-progress-area" id="uploadProgressArea" hidden>
+    <div class="upload-progress-header">
+      <span>Mengupload…</span>
+      <button id="btnCancelAll" class="cancel-btn">Tutup</button>
+    </div>
+    <div id="uploadProgressList"></div>
+  </div>
+
+  <!-- ========== DRAG & DROP OVERLAY ========== -->
+  <div class="drop-overlay" id="dropOverlay">
+    <div class="drop-message">
+      <span class="drop-icon">⬆</span>
+      <p>Lepas file di sini untuk upload</p>
+    </div>
+  </div>
+
+  <!-- ========== MAIN CONTENT ========== -->
+  <main class="file-container" id="fileContainer">
+    <div class="skeleton-grid" id="skeletonGrid">
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+    </div>
+    <div class="file-grid" id="fileGrid" hidden></div>
+    <div class="empty-state" id="emptyState" hidden>
+      <div class="empty-icon">📂</div>
+      <p class="empty-title">Folder ini kosong</p>
+      <p class="empty-sub">Upload file atau buat folder baru</p>
+    </div>
+    <div class="error-state" id="errorState" hidden>
+      <div class="error-icon">⚠️</div>
+      <p class="error-title">Gagal memuat file</p>
+      <p class="error-sub" id="errorMessage">Pastikan server FastAPI sudah berjalan.</p>
+      <button class="btn-retry" id="btnRetry">Coba Lagi</button>
+    </div>
+  </main>
+
+  <!-- ========== FAB UPLOAD ========== -->
+  <button class="fab" id="fabUpload" aria-label="Upload cepat">⬆</button>
+
+  <!-- ========== MODAL: BUAT FOLDER ========== -->
+  <div class="modal-backdrop" id="modalNewFolder" role="dialog" aria-modal="true" aria-labelledby="modalFolderTitle"
+    hidden>
+    <div class="modal">
+      <h2 id="modalFolderTitle" class="modal-title">Buat Folder Baru</h2>
+      <input type="text" id="folderNameInput" class="modal-input" placeholder="Nama folder…" maxlength="120"
+        autocomplete="off" />
+      <p class="modal-hint error" id="folderNameError" hidden>Nama tidak valid</p>
+      <div class="modal-actions">
+        <button class="btn-modal-cancel" id="btnCancelFolder">Batal</button>
+        <button class="btn-modal-ok" id="btnConfirmFolder">Buat</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== MODAL: RENAME ========== -->
+  <div class="modal-backdrop" id="modalRename" role="dialog" aria-modal="true" aria-labelledby="modalRenameTitle"
+    hidden>
+    <div class="modal">
+      <h2 id="modalRenameTitle" class="modal-title">Ganti Nama</h2>
+      <p class="modal-hint" id="renameCurrentName" style="margin-bottom:12px;color:var(--text-2)">—</p>
+      <input type="text" id="renameInput" class="modal-input" placeholder="Nama baru…" maxlength="120"
+        autocomplete="off" />
+      <p class="modal-hint error" id="renameError" hidden>Nama tidak valid</p>
+      <div class="modal-actions">
+        <button class="btn-modal-cancel" id="btnCancelRename">Batal</button>
+        <button class="btn-modal-ok" id="btnConfirmRename">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== MODAL: DETAIL FOLDER ========== -->
+  <div class="modal-backdrop" id="modalFolderDetail" role="dialog" aria-modal="true" aria-labelledby="modalDetailTitle"
+    hidden>
+    <div class="modal">
+      <h2 id="modalDetailTitle" class="modal-title">📁 Detail Folder</h2>
+      <div class="detail-grid" id="detailGrid">
+        <!-- Diisi JS -->
+      </div>
+      <div class="modal-actions" style="margin-top:20px">
+        <button class="btn-modal-cancel" id="btnCloseDetail" style="flex:unset;width:100%">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== MODAL: PINDAHKAN FOLDER ========== -->
+  <div class="modal-backdrop" id="modalMove" role="dialog" aria-modal="true" aria-labelledby="modalMoveTitle" hidden>
+    <div class="modal">
+      <h2 id="modalMoveTitle" class="modal-title">Pindahkan Folder</h2>
+      <p class="modal-hint" id="moveItemName" style="margin-bottom:12px;color:var(--text-2)">—</p>
+      <label class="modal-label">Path tujuan</label>
+      <input type="text" id="moveDestInput" class="modal-input" placeholder="Contoh: /Arsip/2025" autocomplete="off" />
+      <p class="modal-hint" style="margin-top:6px">Ketik path folder tujuan secara manual.</p>
+      <p class="modal-hint error" id="moveError" hidden>Path tujuan tidak valid</p>
+      <div class="modal-actions">
+        <button class="btn-modal-cancel" id="btnCancelMove">Batal</button>
+        <button class="btn-modal-ok" id="btnConfirmMove">Pindahkan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== MODAL: KONFIRMASI HAPUS ========== -->
+  <div class="modal-backdrop" id="modalDelete" role="dialog" aria-modal="true" aria-labelledby="modalDeleteTitle"
+    hidden>
+    <div class="modal modal-danger">
+      <h2 id="modalDeleteTitle" class="modal-title">Hapus Item?</h2>
+      <p class="modal-body" id="deleteItemName">—</p>
+      <p class="modal-hint">Tindakan ini tidak bisa dibatalkan.</p>
+      <div class="modal-actions">
+        <button class="btn-modal-cancel" id="btnCancelDelete">Batal</button>
+        <button class="btn-modal-danger" id="btnConfirmDelete">Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== MODAL: PREVIEW FILE ========== -->
+  <div class="modal-backdrop modal-fullscreen" id="modalPreview" role="dialog" aria-modal="true" hidden>
+    <div class="modal modal-preview">
+      <div class="preview-header">
+        <span class="preview-filename" id="previewFilename">—</span>
+        <button class="btn-icon-only preview-close" id="btnClosePreview" aria-label="Tutup">✕</button>
+      </div>
+      <div class="preview-body" id="previewBody"></div>
+      <div class="preview-footer">
+        <a class="btn-download" id="btnDownloadPreview" href="#" download>⬇ Download</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== TOAST ========== -->
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <!-- TAMBAHKAN 3 SCRIPT INI UNTUK PREVIEW WORD & EXCEL -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docx-preview@0.3.2/dist/docx-preview.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- PDF.js UNTUK PREVIEW PDF (render ke canvas, responsif di mobile) -->
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.min.js"></script>
+  <script>
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.worker.min.js';
+    }
+  </script>
+
+  <script>
+    (function () {
+      const urlObj = window.location;
+      const segments = urlObj.pathname.split('/').filter(Boolean);
+      const firstSegment = segments[0] || '';
+
+      // Deteksi apakah kita sedang menggunakan Nginx berdasarkan pola URL atau flag tertentu,
+      // Atau kita sediakan dua jalur urutan yang aman untuk dicoba tanpa error 404 merah di konsol.
+
+      // Opsi Jalur untuk Nginx vs Non-Nginx
+      // Kita buat array path yang akan dicoba berurutan:
+      let assetPaths = [];
+
+      if (firstSegment) {
+        // Jika ada segmen pertama (misal: "storage")
+        assetPaths = [
+          `${urlObj.origin}/${firstSegment}/thorix-assets`,          // Jalur standar (Tanpa Nginx dobel)
+          `${urlObj.origin}/${firstSegment}/${firstSegment}/thorix-assets` // Jalur jika lewat Nginx
+        ];
+      } else {
+        // Jika di root
+        assetPaths = [
+          `${urlObj.origin}/thorix-assets`
+        ];
+      }
+
+      const cssFiles = ['style.css'];
+      const scriptFiles = [
+        'auth-guard.js',
+        'api.js',
+        'app.js'
+      ];
+
+      // Fungsi universal pemuat aset dengan sistem fallback yang bersih
+      function loadAssetWithFallback(fileName, fileType, paths, pathIndex = 0, onSuccess) {
+        if (pathIndex >= paths.length) {
+          console.error(`Gagal total memuat ${fileType.toUpperCase()} "${fileName}" dari semua jalur.`);
+          return;
+        }
+
+        const currentPath = paths[pathIndex];
+        let element;
+
+        if (fileType === 'css') {
+          element = document.createElement('link');
+          element.rel = 'stylesheet';
+          element.href = `${currentPath}/css/${fileName}`;
+          document.head.appendChild(element);
+        } else {
+          element = document.createElement('script');
+          element.src = `${currentPath}/js/${fileName}`;
+          document.body.appendChild(element);
+        }
+
+        element.onload = () => {
+          // Berhasil dimuat, lanjut ke file berikutnya
+          if (onSuccess) onSuccess();
+        };
+
+        element.onerror = () => {
+          // Jika jalur pertama gagal (misal Nginx butuh dobel, atau sebaliknya),
+          // hapus elemen yang gagal dan coba jalur berikutnya secara diam-diam tanpa error merah mencolok.
+          element.remove();
+          loadAssetWithFallback(fileName, fileType, paths, pathIndex + 1, onSuccess);
+        };
+      }
+
+      // Pemuatan CSS berurutan
+      function loadAllCss(index = 0, onComplete) {
+        if (index >= cssFiles.length) {
+          if (onComplete) onComplete();
+          return;
+        }
+        loadAssetWithFallback(cssFiles[index], 'css', assetPaths, 0, () => {
+          loadAllCss(index + 1, onComplete);
+        });
+      }
+
+      // Pemuatan Script berurutan
+      function loadAllScripts(index = 0) {
+        if (index >= scriptFiles.length) return;
+        loadAssetWithFallback(scriptFiles[index], 'js', assetPaths, 0, () => {
+          loadAllScripts(index + 1);
+        });
+      }
+
+      // Jalankan eksekusi: CSS dulu, lalu Script
+      loadAllCss(0, () => {
+        loadAllScripts(0);
+      });
+    })();
+  </script>
+</body>
+
+</html>

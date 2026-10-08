@@ -10,7 +10,7 @@ from .files import (
 import os
 import shutil
 
-def create(name: str, root:bool, path: str) -> Dict[str, Any]:
+async def create(name: str, root:bool, path: str) -> Dict[str, Any]:
     # 1. Validasi path induk
     dir = virtual_to_real(f"{path}", root)
 
@@ -33,7 +33,7 @@ def create(name: str, root:bool, path: str) -> Dict[str, Any]:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Gagal membuat folder: {str(e)}")
     
-def detail(id: str, root: bool) -> Dict[str, Any]:
+async def detail(id: str, root: bool) -> Dict[str, Any]:
     path = id_to_path(id)
     real_path = virtual_to_real(path, root)
 
@@ -42,7 +42,7 @@ def detail(id: str, root: bool) -> Dict[str, Any]:
 
     return folder_to_item(real_path, path)
 
-def rename(id: str, new_folder_name: str, root: bool) -> Dict[str, Any]:
+async def rename(id: str, new_folder_name: str, root: bool) -> Dict[str, Any]:
     path = virtual_to_real(id_to_path(id), root)
 
     # Validasi apakah file yang ingin diedit memang ada
@@ -57,7 +57,7 @@ def rename(id: str, new_folder_name: str, root: bool) -> Dict[str, Any]:
 
     return {"filename": new_folder_name, "status": "Folder berhasil diubah namanya"}
 # *
-def move(id: str, new_parent_path: str, timpa: bool = False, root: bool = False) -> Dict[str, Any]:
+async def move(id: str, new_parent_path: str, timpa: bool = False, root: bool = False) -> Dict[str, Any]:
     path = virtual_to_real(id_to_path(id), root)
     new_parent_real = virtual_to_real(new_parent_path, root)
 
@@ -79,7 +79,7 @@ def move(id: str, new_parent_path: str, timpa: bool = False, root: bool = False)
 
     return folder_to_item(new_folder_path, f"{new_parent_path}/{path.name}")
 
-def delete(id: str, root: bool) -> Dict[str, Any]:
+async def delete(id: str, root: bool) -> Dict[str, Any]:
     real_path = virtual_to_real(id_to_path(id), root)
 
     if not real_path.exists() or not real_path.is_dir():

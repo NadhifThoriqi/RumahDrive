@@ -5,5 +5,5 @@ from ..service import storage
 router = APIRouter(prefix="/storage", tags=["storage"])
 
 @router.get("/info")
-def get_storage_info():
-    return storage.info()
+async def get_storage_info():
+    return await storage.info()

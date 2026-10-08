@@ -1,5 +1,79 @@
-fastapi
-uvicorn
-pydantic
-python-dotenv
-python-multipart
+# ============================================================
+# RumahDrive — requirements.txt
+# Install dengan: pip install -r requirements.txt
+# ============================================================
+
+# --- Web framework ---
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20   # wajib untuk UploadFile / form-data
+jinja2==3.1.5               # dipakai frontend/__init__.py (Jinja2Templates)
+
+# --- Config & env ---
+pydantic==2.10.4
+pydantic-settings==2.7.1
+email-validator==2.2.0      # wajib untuk pydantic.EmailStr (dipakai di schemas/auth.py)
+python-dotenv==1.0.1
+
+# --- Database (async SQLModel di atas MariaDB/MySQL) ---
+sqlmodel==0.0.22
+aiomysql==0.2.0             # driver async MariaDB/MySQL
+cryptography==44.0.0        # dibutuhkan aiomysql untuk auth plugin caching_sha2_password
+# Kalau server kamu pakai PostgreSQL, ganti baris "aiomysql" di atas dengan:
+asyncpg==0.30.0             # driver async PostgreSQL
+
+# --- Auth / login ---
+bcrypt==4.2.1                # hashing kata sandi
+PyJWT==2.10.1                # JSON Web Token untuk sesi login
+types-PyJWT
+
+# 32 bit
+# annotated-doc==0.0.4
+# annotated-types==0.7.0
+# anyio==4.13.0
+# asyncmy==0.2.14
+# click==8.4.0
+# fastapi==0.141.1
+# h11==0.16.0
+# idna==3.15
+# Jinja2==3.1.6
+# MarkupSafe==3.0.3
+# pydantic==2.13.5
+# pydantic_core==2.46.5
+# python-dotenv==1.2.3
+# python-multipart==0.0.32
+# SQLAlchemy==2.0.52
+# sqlmodel==0.0.42
+# starlette==1.0.0
+# typing-inspection==0.4.2
+# typing_extensions==4.15.0
+# uvicorn==0.52.4
+
+
+
+# 64 bit
+# annotated-doc==0.0.5
+# annotated-types==0.8.0
+# anyio==4.15.1
+# asyncmy==0.2.14
+# certifi==2026.7.22
+# charset-normalizer==3.5.1
+# click==8.5.0
+# fastapi==0.141.1
+# greenlet==3.5.5
+# h11==0.16.0
+# idna==3.19
+# Jinja2==3.1.6
+# MarkupSafe==3.0.3
+# pydantic==2.13.5
+# pydantic_core==2.46.5
+# python-dotenv==1.2.3
+# python-multipart==0.0.32
+# requests==2.34.2
+# SQLAlchemy==2.0.52
+# sqlmodel==0.0.42
+# starlette==1.6.0
+# typing-inspection==0.4.4
+# typing_extensions==4.16.0
+# urllib3==2.7.0
+# uvicorn==0.52.4

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Masuk — RumahDrive</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+</head>
+
+<body>
+
+  <div class="login-screen">
+    <div class="login-card">
+      <div class="login-logo">
+        <span class="logo-icon">🏠</span>
+        <span class="logo-text">RumahDrive</span>
+      </div>
+      <p class="login-sub">Penyimpanan Keluarga</p>
+
+      <form id="loginForm" class="login-form" autocomplete="off">
+        <label class="login-label" for="emailInput">Email</label>
+        <input type="email" id="emailInput" class="login-input" placeholder="nama@keluarga.id" autocomplete="username"
+          style="margin-bottom:16px" autofocus />
+
+        <label class="login-label" for="passwordInput">Kata sandi</label>
+        <div class="login-input-wrap">
+          <input type="password" id="passwordInput" class="login-input" placeholder="Masukkan kata sandi…"
+            autocomplete="current-password" />
+          <button type="button" class="btn-toggle-pwd" id="btnTogglePwd" aria-label="Tampilkan kata sandi">👁</button>
+        </div>
+
+        <label class="login-remember">
+          <input type="checkbox" id="rememberInput" />
+          <span>Ingat saya di perangkat ini</span>
+        </label>
+
+        <p class="login-error" id="loginError" hidden>Kata sandi salah. Silakan coba lagi.</p>
+
+        <button type="submit" class="btn-login" id="btnLogin">
+          <span id="btnLoginText">Masuk</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const urlObj = window.location;
+      const segments = urlObj.pathname.split('/').filter(Boolean);
+      const firstSegment = segments[0] || '';
+
+      // Deteksi apakah kita sedang menggunakan Nginx berdasarkan pola URL atau flag tertentu,
+      // Atau kita sediakan dua jalur urutan yang aman untuk dicoba tanpa error 404 merah di konsol.
+
+      // Opsi Jalur untuk Nginx vs Non-Nginx
+      // Kita buat array path yang akan dicoba berurutan:
+      let assetPaths = [];
+
+      if (firstSegment) {
+        // Jika ada segmen pertama (misal: "storage")
+        assetPaths = [
+          `${urlObj.origin}/${firstSegment}/thorix-assets`,          // Jalur standar (Tanpa Nginx dobel)
+          `${urlObj.origin}/${firstSegment}/${firstSegment}/thorix-assets` // Jalur jika lewat Nginx
+        ];
+      } else {
+        // Jika di root
+        assetPaths = [
+          `${urlObj.origin}/thorix-assets`
+        ];
+      }
+
+      const cssFiles = ['login.css'];
+      const scriptFiles = ['api.js', 'login.js'];
+
+      // Fungsi universal pemuat aset dengan sistem fallback yang bersih
+      function loadAssetWithFallback(fileName, fileType, paths, pathIndex = 0, onSuccess) {
+        if (pathIndex >= paths.length) {
+          console.error(`Gagal total memuat ${fileType.toUpperCase()} "${fileName}" dari semua jalur.`);
+          return;
+        }
+
+        const currentPath = paths[pathIndex];
+        let element;
+
+        if (fileType === 'css') {
+          element = document.createElement('link');
+          element.rel = 'stylesheet';
+          element.href = `${currentPath}/css/${fileName}`;
+          document.head.appendChild(element);
+        } else {
+          element = document.createElement('script');
+          element.src = `${currentPath}/js/${fileName}`;
+          document.body.appendChild(element);
+        }
+
+        element.onload = () => {
+          // Berhasil dimuat, lanjut ke file berikutnya
+          if (onSuccess) onSuccess();
+        };
+
+        element.onerror = () => {
+          // Jika jalur pertama gagal (misal Nginx butuh dobel, atau sebaliknya),
+          // hapus elemen yang gagal dan coba jalur berikutnya secara diam-diam tanpa error merah mencolok.
+          element.remove();
+          loadAssetWithFallback(fileName, fileType, paths, pathIndex + 1, onSuccess);
+        };
+      }
+
+      // Pemuatan CSS berurutan
+      function loadAllCss(index = 0, onComplete) {
+        if (index >= cssFiles.length) {
+          if (onComplete) onComplete();
+          return;
+        }
+        loadAssetWithFallback(cssFiles[index], 'css', assetPaths, 0, () => {
+          loadAllCss(index + 1, onComplete);
+        });
+      }
+
+      // Pemuatan Script berurutan
+      function loadAllScripts(index = 0) {
+        if (index >= scriptFiles.length) return;
+        loadAssetWithFallback(scriptFiles[index], 'js', assetPaths, 0, () => {
+          loadAllScripts(index + 1);
+        });
+      }
+
+      // Jalankan eksekusi: CSS dulu, lalu Script
+      loadAllCss(0, () => {
+        loadAllScripts(0);
+      });
+    })();
+  </script>
+
+  <!-- <script src="/storage/thorix-assets/js/login.js"></script> -->
+</body>
+
+</html>

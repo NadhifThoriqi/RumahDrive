@@ -11,22 +11,26 @@ import base64
 import mimetypes
 import urllib.parse
 
+from ..db.config import settings
+
 load_dotenv()
 
-def directory():
-    DIR_ENV = os.getenv("DIR")
-    if DIR_ENV is None: 
-        raise RuntimeError("Environment variable 'DIR' is not set")
-
-    DIR = os.path.abspath(DIR_ENV) 
+def directory() -> str:
+    DIR = os.path.abspath(settings.dir) 
     os.makedirs(DIR, exist_ok=True)
     return DIR
 
-def key(password: str = Query(default="", description="Password untuk mengakses file root")) -> bool:
+
+def key(
+    password: str = Query(
+        default="",
+        description="Password untuk mengakses file root")
+) -> bool:
     KEY_ENV = os.getenv("KEY")
     if KEY_ENV is None: 
         raise RuntimeError("Environment variable 'KEY' is not set")
     return False if path_to_id(password) != KEY_ENV else True
+
 
 def path_to_id(virtual_path: str) -> str:
     """"/Foto/pantai.jpg" → "L0ZvdG8vcGFudGFpLmpwZw=="""
@@ -83,10 +87,10 @@ def file_to_item(real_path: Path, virtual_path: str) -> Dict[str, Any]:
         "created_at"    : datetime.fromtimestamp(stat.st_ctime).isoformat() + "Z",
         "modified_at"   : datetime.fromtimestamp(stat.st_mtime).isoformat() + "Z",
         "mime_type"     : mime,
-        "thumbnail_url" : f"{os.getenv('BASE_URL', 'http://localhost:2026')}/thorix/files/{item_id}/thumbnail" if mime and mime.startswith("image/") else None,
+        "thumbnail_url" : f"/storage/thorix-api/files/{item_id}/thumbnail" if mime and mime.startswith("image/") else None,
     }
 
-def lists(virtual_path: str, root: bool = False) -> Dict[str, Any]:
+async def lists(virtual_path: str, root: bool = False) -> Dict[str, Any]:
     # 1. Cari path riil di disk
     target_dir = virtual_to_real(virtual_path, root)
 
@@ -110,7 +114,7 @@ def lists(virtual_path: str, root: bool = False) -> Dict[str, Any]:
         "items"             : file_list
     }
 
-def upload(file: UploadFile, path: str, root: bool = False) -> Dict[str, Any]: 
+async def upload(file: UploadFile, path: str, root: bool = False) -> Dict[str, Any]: 
     # Mengambil lokasi path tujuan
     dest_dir = virtual_to_real(path, root)
 
@@ -130,7 +134,7 @@ def upload(file: UploadFile, path: str, root: bool = False) -> Dict[str, Any]:
 
     return file_to_item( file_path, virtual)
     
-def delete(id: str, root: bool = False) -> None:
+async def delete(id: str, root: bool = False) -> None:
     path = id_to_path(id)
     file_path = virtual_to_real(path, root)
 
@@ -144,7 +148,7 @@ def delete(id: str, root: bool = False) -> None:
     else:
         os.remove(file_path)
 
-def download(id: str, preview: bool = False, root: bool = False) -> FileResponse:
+async def download(id: str, preview: bool = False, root: bool = False) -> FileResponse:
 # 1. Dekode ID menjadi virtual path (misal: "Foto/pantai.jpg")
     try:
         virtual_path = id_to_path(id)
@@ -186,16 +190,24 @@ def download(id: str, preview: bool = False, root: bool = False) -> FileResponse
                 headers=headers
             )
 
-def thumbnail(id: str, root: bool = False) -> StreamingResponse:
+async def thumbnail(id: str, root: bool = False) -> StreamingResponse:
     file_path = virtual_to_real(id_to_path(id), root=root)
 
     # Cek apakah file ada
     if not os.path.exists(file_path): 
         raise HTTPException(status_code=404, detail="File tidak ditemukan")
 
-    return StreamingResponse(open(file_path, "rb"), media_type="image/jpeg")
+    # FIX: sebelumnya media_type di-hardcode "image/jpeg" untuk SEMUA file,
+    # padahal thumbnail bisa berupa .png/.webp/.gif/dll. Sebagian browser/
+    # ekstensi jadi menolak menampilkannya karena Content-Type-nya salah.
+    # Sekarang dideteksi dari file aslinya, dengan fallback aman kalau tidak dikenali.
+    mime, _ = mimetypes.guess_type(str(file_path))
+    if not mime or not mime.startswith("image/"):
+        mime = "application/octet-stream"
+        
+    return StreamingResponse(open(file_path, "rb"), media_type=mime)
 
-def update(filename: str, file: UploadFile, root: bool = False) -> Dict[str, Any]:
+async def update(filename: str, file: UploadFile, root: bool = False) -> Dict[str, Any]:
     file_path = virtual_to_real(filename, root)
     
     # Validasi apakah file yang ingin diedit memang ada
@@ -208,7 +220,7 @@ def update(filename: str, file: UploadFile, root: bool = False) -> Dict[str, Any
         
     return {"filename": filename, "status": "File berhasil diperbarui"}
 
-def rename(id: str, new_filename: str, root: bool = False) -> Dict[str, Any]:
+async def rename(id: str, new_filename: str, root: bool = False) -> Dict[str, Any]:
     file_path = virtual_to_real(id_to_path(id), root)
 
     # Validasi apakah file yang ingin diedit memang ada

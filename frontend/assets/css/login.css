@@ -1,0 +1,183 @@
+/* ============================================================
+   RumahDrive — login.css
+   Halaman login mandiri (tidak bergantung pada style.css)
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:          #0f1117;
+  --surface:     #181c27;
+  --surface2:    #222840;
+  --border:      #2a3050;
+  --accent:      #4f8fff;
+  --accent-glow: rgba(79,143,255,.18);
+  --danger:      #ff4f6a;
+  --text-1:      #e8eaf6;
+  --text-2:      #8892b0;
+  --text-3:      #4a5570;
+  --font:        'Sora', sans-serif;
+  --radius-sm:   8px;
+  --radius:      14px;
+  --radius-lg:   20px;
+  --shadow:      0 4px 24px rgba(0,0,0,.45);
+  --transition:  .2s cubic-bezier(.4,0,.2,1);
+  --safe-b:      env(safe-area-inset-bottom, 0px);
+  --safe-t:      env(safe-area-inset-top, 0px);
+}
+
+html { scroll-behavior: smooth; }
+[hidden] { display: none !important; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text-1);
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+/* ---------- BACKGROUND DECORATION ---------- */
+.login-screen {
+  min-height: 100dvh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(24px + var(--safe-t)) 20px calc(24px + var(--safe-b));
+  background:
+    radial-gradient(circle at 15% 20%, var(--accent-glow), transparent 45%),
+    radial-gradient(circle at 85% 80%, rgba(79,143,255,.1), transparent 40%),
+    var(--bg);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 36px 28px 28px;
+  animation: cardIn .3s cubic-bezier(.4,0,.2,1);
+}
+@keyframes cardIn { from { opacity:0; transform:translateY(20px) scale(.98);} to { opacity:1; transform:translateY(0) scale(1);} }
+
+.login-logo { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.logo-icon { font-size: 2rem; }
+.logo-text {
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  background: linear-gradient(90deg, #fff 0%, var(--accent) 120%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.login-sub {
+  text-align: center;
+  font-size: .82rem;
+  color: var(--text-2);
+  margin-top: 6px;
+  margin-bottom: 28px;
+}
+
+.login-form { display: flex; flex-direction: column; }
+
+.login-label {
+  display: block;
+  font-size: .78rem;
+  color: var(--text-2);
+  margin-bottom: 6px;
+}
+
+.login-input-wrap { position: relative; display: flex; align-items: center; }
+
+.login-input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-1);
+  font-family: var(--font);
+  font-size: 16px; /* min 16px agar Safari iOS tidak auto-zoom saat fokus */
+  padding: 12px 44px 12px 14px;
+  outline: none;
+  transition: border-color var(--transition);
+}
+.login-input:focus { border-color: var(--accent); }
+.login-input.error { border-color: var(--danger); }
+
+.btn-toggle-pwd {
+  position: absolute;
+  right: 4px;
+  background: transparent;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: .95rem;
+  display: grid;
+  place-items: center;
+  color: var(--text-3);
+  transition: color var(--transition);
+}
+.btn-toggle-pwd:hover { color: var(--text-1); }
+
+.login-error {
+  font-size: .78rem;
+  color: var(--danger);
+  margin-top: 8px;
+}
+
+.login-remember {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: .8rem;
+  color: var(--text-2);
+  cursor: pointer;
+  user-select: none;
+}
+.login-remember input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.btn-login {
+  margin-top: 20px;
+  width: 100%;
+  background: var(--accent);
+  color: #fff;
+  border: 1px solid var(--accent);
+  font-family: var(--font);
+  font-size: .92rem;
+  font-weight: 600;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition), transform var(--transition), opacity var(--transition);
+}
+.btn-login:hover { background: #6fa8ff; }
+.btn-login:active { transform: scale(.98); }
+.btn-login:disabled { opacity: .6; cursor: not-allowed; }
+
+/* ---------- SHAKE ANIMATION UNTUK SALAH PASSWORD ---------- */
+.shake { animation: shake .35s ease; }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (min-width: 600px) {
+  .login-card { padding: 44px 36px 32px; }
+}
